@@ -240,17 +240,26 @@ function stopAllBgm() {
 // スタート
 // ==============================
 function startGame() {
-  // ユーザー操作の直後にAudioを初期化（スマホ対応の要）
+  // ユーザー操作の直後にAudioを初期化
   initAudio();
+
+  // iOS Safari対策：全音声を一瞬再生してアンロック
+  [bgmNormal, bgmCreepy, sfxHit, sfxScare].forEach(a => {
+    a.volume = 0;
+    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(e => console.log('unlock error:', e));
+  });
+
+  // BGMを正しい音量で再生
+  bgmNormal.volume = 0.5;
+  bgmNormal.play()
+    .then(() => console.log('BGM再生成功！'))
+    .catch(e => console.log('BGM再生失敗:', e));
 
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game').style.display = 'block';
 
   // ジャンプスケア画像を先読み
   document.getElementById('scare-img').src = SCARE_SRC;
-
-  // BGM再生
-  bgmNormal.play().catch(()=>{});
 
   buildGrid();
 }
