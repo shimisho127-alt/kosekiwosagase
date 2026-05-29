@@ -505,6 +505,13 @@ function startGame() {
   document.getElementById('instruction-bar').style.display = '';
   document.getElementById('grid-wrapper').style.display = '';
 
+  // ジャンプスケア画像を先読み
+  const scarePreload = new Image();
+  scarePreload.src = SCARE_IMG;
+  scarePreload.onload = () => {
+    document.getElementById('scare-img').src = SCARE_IMG;
+  };
+
   buildGrid();
 }
 
@@ -559,42 +566,34 @@ function buildGrid() {
   grid.innerHTML = '';
 
   const round = ROUNDS[currentRound];
+  // スロット0〜5をシャッフルして表示順を決める
   const order = Array.from({length:6},(_,i)=>i).sort(()=>Math.random()-0.5);
 
-  // ③ 先に全画像をプリロードしてから一気にグリッドを描画
-  let loaded = 0;
-  const total = 6;
-  const imgCache = {};
+  renderDots();
+  applyGlitch();
 
   // ローディング表示
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa;font-size:13px;">読み込み中…</div>';
 
+  // 全6枚プリロード完了後にまとめて描画
+  let loaded = 0;
+
   order.forEach(slotIdx => {
-    const src = imgPath(currentRound + 1, slotIdx + 1);
     const preload = new Image();
-    preload.onload = preload.onerror = () => {
-      imgCache[slotIdx] = preload.naturalWidth > 0 ? src : null;
-      loaded++;
-      if (loaded === total) renderButtons();
-    };
-    preload.src = src;
+    preload.onload = () => { loaded++; if (loaded === 6) renderButtons(); };
+    preload.onerror = () => { loaded++; if (loaded === 6) renderButtons(); };
+    preload.src = imgPath(currentRound + 1, slotIdx + 1);
   });
 
   function renderButtons() {
     grid.innerHTML = '';
     order.forEach(slotIdx => {
-      const isSeki = slotIdx === round.seki;
+      const isSeki = (slotIdx === round.seki);
       const btn = document.createElement('button');
       btn.className = 'face-btn';
 
       const img = document.createElement('img');
-      if (imgCache[slotIdx]) {
-        img.src = imgCache[slotIdx];
-      } else {
-        // 画像が読めなかった場合のフォールバック
-        img.style.background = '#ddd';
-        img.style.minHeight = '80px';
-      }
+      img.src = imgPath(currentRound + 1, slotIdx + 1);
       img.alt = '';
       img.draggable = false;
 
@@ -603,9 +602,6 @@ function buildGrid() {
       grid.appendChild(btn);
     });
   }
-
-  renderDots();
-  applyGlitch();
 }
 
 // =====================================================
@@ -679,7 +675,6 @@ function showRoundFlash() {
 // =====================================================
 function triggerScare() {
   playScareSoundFull();
-  document.getElementById('scare-img').src = SCARE_IMG;
   document.getElementById('scare-overlay').classList.add('active');
   setTimeout(() => {
     document.getElementById('restart-btn').style.display = 'block';
