@@ -90,8 +90,8 @@
   /* ===== BUTTON GRID ===== */
   #button-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .face-btn {
@@ -313,22 +313,110 @@
     box-shadow: 0 4px 20px rgba(255,71,87,0.5);
     -webkit-appearance: none;
   }
+
+  /* ===== START SCREEN ===== */
+  #start-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--dark);
+    z-index: 8000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  #start-screen.hidden { display: none; }
+  #start-inner {
+    text-align: center;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  #start-emoji {
+    font-size: 64px;
+    animation: startBounce 1.2s ease-in-out infinite;
+  }
+  @keyframes startBounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  #start-title {
+    color: #fff;
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 4px;
+  }
+  #start-title span { color: var(--primary); }
+  #start-sub {
+    color: #aaa;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  #start-volume-hint {
+    background: #ffd32a22;
+    border: 1px solid #ffd32a66;
+    color: #ffd32a;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 30px;
+    letter-spacing: 1px;
+    animation: hintPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes hintPulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  #start-btn {
+    margin-top: 8px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 18px 48px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 17px;
+    font-weight: 900;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 3px;
+    box-shadow: 0 6px 24px rgba(255,71,87,0.5);
+    -webkit-appearance: none;
+    animation: btnGlow 1.5s ease-in-out infinite;
+  }
+  @keyframes btnGlow {
+    0%,100% { box-shadow: 0 6px 24px rgba(255,71,87,0.5); }
+    50% { box-shadow: 0 6px 40px rgba(255,71,87,0.9); }
+  }
+  #start-btn:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
 
-<header id="header">
+<!-- START SCREEN -->
+<div id="start-screen">
+  <div id="start-inner">
+    <div id="start-emoji">🔍</div>
+    <h2 id="start-title">小関を<span>探せ！</span></h2>
+    <p id="start-sub">7ラウンド・全6人の中から<br>小関を見つけてタップ！</p>
+    <div id="start-volume-hint">🔊 音量を上げてからスタート！</div>
+    <button id="start-btn" onclick="startGame()">タップしてスタート</button>
+  </div>
+</div>
+
+<header id="header" style="display:none">
   <h1>小関を<span>探せ！</span></h1>
 </header>
 
-<div id="progress-area">
+<div id="progress-area" style="display:none">
   <div id="round-label">ROUND <span id="round-num">1</span> / 7</div>
   <div id="dots"></div>
 </div>
 
-<div id="instruction-bar" id="inst">👆 小関をタップして！</div>
+<div id="instruction-bar" style="display:none">👆 小関をタップして！</div>
 
-<div id="grid-wrapper">
+<div id="grid-wrapper" style="display:none">
   <div id="button-grid"></div>
 </div>
 
@@ -345,25 +433,25 @@
 <script>
 // =====================================================
 //  画像設定
-//  ・各ラウンドに9枚（うち1枚が小関）
-//  ・7ラウンド分 → images/r1_1.jpg 〜 images/r7_9.jpg
-//  ・小関の画像は各ラウンドで sekiIndex で指定（0〜8）
+//  ・各ラウンドに6枚（うち1枚が小関）
+//  ・7ラウンド分 → images/r1_1.jpg 〜 images/r7_6.jpg
+//  ・小関の画像は各ラウンドで sekiIndex で指定（0〜5）
 // =====================================================
 const TOTAL_ROUNDS = 7;
 
 // ラウンドごとの設定
 const ROUNDS = [
-  { seki: 4, names: ['Aさん','Bさん','Cさん','Dさん','小関','Eさん','Fさん','Gさん','Hさん'] },
-  { seki: 1, names: ['Iさん','小関','Jさん','Kさん','Lさん','Mさん','Nさん','Oさん','Pさん'] },
-  { seki: 7, names: ['Qさん','Rさん','Sさん','Tさん','Uさん','Vさん','Wさん','小関','Xさん'] },
-  { seki: 2, names: ['Yさん','Zさん','小関','AAさん','BBさん','CCさん','DDさん','EEさん','FFさん'] },
-  { seki: 5, names: ['GGさん','HHさん','IIさん','JJさん','KKさん','小関','LLさん','MMさん','NNさん'] },
-  { seki: 0, names: ['小関','OOさん','PPさん','QQさん','RRさん','SSさん','TTさん','UUさん','VVさん'] },
-  { seki: 6, names: ['WWさん','XXさん','YYさん','ZZさん','AABさん','BBBさん','小関','CCBさん','DDBさん'] },
+  { seki: 3, names: ['Aさん','Bさん','Cさん','小関','Dさん','Eさん'] },
+  { seki: 1, names: ['Fさん','小関','Gさん','Hさん','Iさん','Jさん'] },
+  { seki: 5, names: ['Kさん','Lさん','Mさん','Nさん','Oさん','小関'] },
+  { seki: 0, names: ['小関','Pさん','Qさん','Rさん','Sさん','Tさん'] },
+  { seki: 4, names: ['Uさん','Vさん','Wさん','Xさん','小関','Yさん'] },
+  { seki: 2, names: ['Zさん','AAさん','小関','BBさん','CCさん','DDさん'] },
+  { seki: 3, names: ['EEさん','FFさん','GGさん','小関','HHさん','IIさん'] },
 ];
 
 // 各ラウンドの画像パス
-// images/r{round}_{slot}.jpg （round=1〜7, slot=1〜9）
+// images/r{round}_{slot}.jpg （round=1〜7, slot=1〜6）
 function imgPath(round, slot) {
   return `images/r${round}_${slot}.jpg`;
 }
@@ -402,8 +490,31 @@ function ensureAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
-document.addEventListener('click', ensureAudio, { once: true });
-document.addEventListener('touchstart', ensureAudio, { once: true });
+
+// スタート画面のボタンを押したときに呼ぶ
+// → ここでAudioContextを起動＆無音バッファを再生して音量をウォームアップ
+function startGame() {
+  // AudioContext起動
+  ensureAudio();
+
+  // 無音バッファを再生してブラウザの音量制限を解除
+  try {
+    const silentBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
+    const silentSrc = audioCtx.createBufferSource();
+    silentSrc.buffer = silentBuf;
+    silentSrc.connect(audioCtx.destination);
+    silentSrc.start();
+  } catch(e) {}
+
+  // スタート画面を隠してゲームを表示
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('header').style.display = '';
+  document.getElementById('progress-area').style.display = '';
+  document.getElementById('instruction-bar').style.display = '';
+  document.getElementById('grid-wrapper').style.display = '';
+
+  buildGrid();
+}
 
 // =====================================================
 //  ドット（進捗）描画
@@ -457,11 +568,11 @@ function buildGrid() {
 
   const round = ROUNDS[currentRound];
   // ランダム順でスロットをシャッフル
-  const slots = Array.from({length:9},(_,i)=>i).sort(()=>Math.random()-0.5);
+  const slots = Array.from({length:6},(_,i)=>i).sort(()=>Math.random()-0.5);
   // sekiはどこに来るかランダム（スロットのどこかに自然に入る）
   // → シャッフルされた順でボタンを作るが、seki情報はROUNDS[].sekiで固定
   // シャッフルして表示位置を変える（画像スロット番号はランダム配置）
-  const order = Array.from({length:9},(_,i)=>i).sort(()=>Math.random()-0.5);
+  const order = Array.from({length:6},(_,i)=>i).sort(()=>Math.random()-0.5);
 
   order.forEach(slotIdx => {
     const isSeki = slotIdx === round.seki;
@@ -655,9 +766,8 @@ function restartGame() {
 }
 
 // =====================================================
-//  起動
+//  起動（startGame() から呼ばれる）
 // =====================================================
-buildGrid();
 </script>
 </body>
 </html>
