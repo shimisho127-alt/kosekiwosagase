@@ -185,6 +185,7 @@ const SEKI_LINES = [
 // ==============================
 let round = 0;
 let bubbleTimer = null;
+let audioCtx = null;
 
 // ==============================
 // 音声（mp3）- スタート時に生成
@@ -243,16 +244,21 @@ function startGame() {
   // ユーザー操作の直後にAudioを初期化
   initAudio();
 
-  // iOS Safari対策：scareとhitだけ無音でアンロック（BGMは除く）
-  [sfxHit, sfxScare].forEach(a => {
-    const originalVolume = a.volume;
-    a.volume = 0;
-    a.play().then(() => {
-      a.pause();
-      a.currentTime = 0;
-      a.volume = originalVolume;
-    }).catch(()=>{});
-  });
+  // iOS Safari対策：hitだけ無音でアンロック
+  const originalVol = sfxHit.volume;
+  sfxHit.volume = 0;
+  sfxHit.play().then(() => {
+    sfxHit.pause();
+    sfxHit.currentTime = 0;
+    sfxHit.volume = originalVol;
+  }).catch(()=>{});
+
+  // AudioContextをアンロック（無音バッファを再生）
+  const silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+  const silentSrc = audioCtx.createBufferSource();
+  silentSrc.buffer = silentBuf;
+  silentSrc.connect(audioCtx.destination);
+  silentSrc.start();
 
   // BGMを再生
   bgmNormal.volume = 0.5;
@@ -327,7 +333,7 @@ function onTap(e, btn, isSeki) {
     if (round >= 7) {
       // ジャンプスケアはタップ直後に実行（スマホ対応）
       stopAllBgm();
-      if (sfxScare) { sfxScare.currentTime = 0; sfxScare.play().catch(()=>{}); }
+      playScream();
       document.getElementById('scare').classList.add('active');
       setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
     } else {
@@ -355,6 +361,44 @@ function showBubble(e, text) {
   void b.offsetWidth;
   b.style.animation = '';
   bubbleTimer = setTimeout(() => b.style.display = 'none', 1600);
+}
+// ==============================
+// ジャンプスケア爆音（Web Audio API）
+// ==============================
+function playScream() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+
+    // ノイズ爆発
+    const bufLen = audioCtx.sampleRate * 2;
+    const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/bufLen, 0.3);
+    const ns = audioCtx.createBufferSource(), ng = audioCtx.createGain();
+    ns.buffer = buf;
+    ng.gain.setValueAtTime(6, now);
+    ng.gain.exponentialRampToValueAtTime(0.001, now+2);
+    ns.connect(ng); ng.connect(audioCtx.destination); ns.start(now);
+
+    // 高音スクリーム
+    const o = audioCtx.createOscillator(), og = audioCtx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(1200, now);
+    o.frequency.exponentialRampToValueAtTime(150, now+1.5);
+    og.gain.setValueAtTime(2.5, now);
+    og.gain.exponentialRampToValueAtTime(0.001, now+1.5);
+    o.connect(og); og.connect(audioCtx.destination); o.start(now); o.stop(now+1.5);
+
+    // 低音ドン
+    const b = audioCtx.createOscillator(), bg = audioCtx.createGain();
+    b.type = 'sine';
+    b.frequency.setValueAtTime(60, now);
+    b.frequency.exponentialRampToValueAtTime(30, now+1);
+    bg.gain.setValueAtTime(4, now);
+    bg.gain.exponentialRampToValueAtTime(0.001, now+1.2);
+    b.connect(bg); bg.connect(audioCtx.destination); b.start(now); b.stop(now+1.2);
+  } catch(e) { console.log('scream error:', e); }
 }
 </script>
 </body>
