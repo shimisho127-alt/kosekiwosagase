@@ -158,8 +158,6 @@
 // ==============================
 // 設定
 // ==============================
-// 各ラウンドの小関スロット番号（1〜6）
-// 例: sekiSlot:4 → r1_4.jpg が小関
 const ROUNDS = [
   { sekiSlot: 4 },
   { sekiSlot: 2 },
@@ -186,37 +184,62 @@ const SEKI_LINES = [
 // 状態
 // ==============================
 let round = 0;
-let audioCtx = null;
 let bubbleTimer = null;
 
 // ==============================
-// Audio
+// 音声（mp3）
 // ==============================
-function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+const bgmNormal = new Audio('sounds/bgm_normal.mp3');
+bgmNormal.loop = true;
+bgmNormal.volume = 0.5;
+
+const bgmCreepy = new Audio('sounds/bgm_creepy.mp3');
+bgmCreepy.loop = true;
+bgmCreepy.volume = 0.0; // フェードインで上げる
+
+const sfxHit   = new Audio('sounds/hit.mp3');
+const sfxScare = new Audio('sounds/scare.mp3');
+sfxScare.volume = 1.0;
+
+let bgmFadeTimer = null;
+
+// BGM切り替え：normalをフェードアウト、creepyをフェードイン
+function switchToCreepy() {
+  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
+  bgmCreepy.currentTime = 0;
+  bgmCreepy.play().catch(()=>{});
+  bgmFadeTimer = setInterval(() => {
+    if (bgmNormal.volume > 0.02) {
+      bgmNormal.volume = Math.max(0, bgmNormal.volume - 0.05);
+      bgmCreepy.volume = Math.min(0.5, bgmCreepy.volume + 0.05);
+    } else {
+      bgmNormal.volume = 0;
+      bgmNormal.pause();
+      bgmCreepy.volume = 0.5;
+      clearInterval(bgmFadeTimer);
+    }
+  }, 100);
+}
+
+function stopAllBgm() {
+  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
+  bgmNormal.pause();
+  bgmCreepy.pause();
 }
 
 // ==============================
 // スタート
 // ==============================
 function startGame() {
-  initAudio();
-  // 無音再生でウォームアップ
-  try {
-    const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-    const src = audioCtx.createBufferSource();
-    src.buffer = buf;
-    src.connect(audioCtx.destination);
-    src.start();
-  } catch(e){}
-
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game').style.display = 'block';
 
   // ジャンプスケア画像を先読み
-  const preScareImg = document.getElementById('scare-img');
-  preScareImg.src = SCARE_SRC;
+  document.getElementById('scare-img').src = SCARE_SRC;
+
+  // BGM再生（ユーザー操作直後なので再生できる）
+  bgmNormal.currentTime = 0;
+  bgmNormal.play().catch(()=>{});
 
   buildGrid();
 }
@@ -226,9 +249,8 @@ function startGame() {
 // ==============================
 function buildGrid() {
   const cfg = ROUNDS[round];
-  const sekiSlot = cfg.sekiSlot; // 1〜6
+  const sekiSlot = cfg.sekiSlot;
 
-  // 表示順をシャッフル（スロット番号1〜6をランダム並び替え）
   const slots = [1,2,3,4,5,6].sort(() => Math.random() - 0.5);
 
   // ドット更新
@@ -241,26 +263,26 @@ function buildGrid() {
   }
   document.getElementById('round-num').textContent = round + 1;
 
-  // グリッチ
+  // グリッチ＆BGM切り替え
   document.body.className = '';
-  if (round >= 5) document.body.classList.add('glitch3');
-  else if (round >= 3) document.body.classList.add('glitch2');
-  else if (round >= 2) document.body.classList.add('glitch1');
+  if (round >= 5) {
+    document.body.classList.add('glitch3');
+  } else if (round >= 3) {
+    document.body.classList.add('glitch2');
+    if (round === 4) switchToCreepy(); // R5でcreepyに切り替え
+  } else if (round >= 2) {
+    document.body.classList.add('glitch1');
+  }
 
   // グリッド描画
   const grid = document.getElementById('button-grid');
   grid.innerHTML = '';
-
   slots.forEach(slotNum => {
     const isSeki = (slotNum === sekiSlot);
-    const src = `images/r${round + 1}_${slotNum}.jpg`;
-
     const btn = document.createElement('button');
     btn.className = 'face-btn';
-
     const img = document.createElement('img');
-    img.src = src;
-
+    img.src = `images/r${round + 1}_${slotNum}.jpg`;
     btn.appendChild(img);
     btn.addEventListener('click', e => onTap(e, btn, isSeki));
     grid.appendChild(btn);
@@ -271,21 +293,28 @@ function buildGrid() {
 // タップ
 // ==============================
 function onTap(e, btn, isSeki) {
-  initAudio();
   if (isSeki) {
-    playHit();
+    // 正解音
+    sfxHit.currentTime = 0;
+    sfxHit.play().catch(()=>{});
+
     showBubble(e, SEKI_LINES[round] || SEKI_LINES[0]);
     btn.classList.add('hit');
     round++;
+
     if (round >= 7) {
-      setTimeout(triggerScare, 700);
+      // ジャンプスケアはタップ直後に実行（スマホ対応）
+      stopAllBgm();
+      sfxScare.currentTime = 0;
+      sfxScare.play().catch(()=>{});
+      document.getElementById('scare').classList.add('active');
+      setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
     } else {
       setTimeout(buildGrid, 600);
     }
   } else {
     btn.classList.add('wrong');
     btn.addEventListener('animationend', () => btn.classList.remove('wrong'), {once:true});
-    playMiss();
   }
 }
 
@@ -300,77 +329,11 @@ function showBubble(e, text) {
   b.style.left = (t.clientX || window.innerWidth/2) + 'px';
   b.style.top  = (t.clientY || window.innerHeight/2) + 'px';
   b.style.display = 'block';
-  void b.offsetWidth; // reflow
+  void b.offsetWidth;
   b.style.animation = 'none';
   void b.offsetWidth;
   b.style.animation = '';
   bubbleTimer = setTimeout(() => b.style.display = 'none', 1600);
-}
-
-// ==============================
-// ジャンプスケア
-// ==============================
-function triggerScare() {
-  playScream();
-  document.getElementById('scare').classList.add('active');
-  setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
-}
-
-// ==============================
-// 音
-// ==============================
-function playHit() {
-  try {
-    initAudio();
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(600, audioCtx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
-    g.gain.setValueAtTime(0.4, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime + 0.2);
-  } catch(e){}
-}
-
-function playMiss() {
-  try {
-    initAudio();
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = 'sawtooth'; o.frequency.setValueAtTime(200, audioCtx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
-    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime + 0.2);
-  } catch(e){}
-}
-
-function playScream() {
-  try {
-    initAudio();
-    const now = audioCtx.currentTime;
-    // ノイズ
-    const bufLen = audioCtx.sampleRate * 2;
-    const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < bufLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/bufLen, 0.3);
-    const ns = audioCtx.createBufferSource(), ng = audioCtx.createGain();
-    ns.buffer = buf;
-    ng.gain.setValueAtTime(6, now); ng.gain.exponentialRampToValueAtTime(0.001, now+2);
-    ns.connect(ng); ng.connect(audioCtx.destination); ns.start(now);
-    // スクリーム
-    const o = audioCtx.createOscillator(), og = audioCtx.createGain();
-    o.type = 'sawtooth'; o.frequency.setValueAtTime(1200, now);
-    o.frequency.exponentialRampToValueAtTime(150, now+1.5);
-    og.gain.setValueAtTime(2.5, now); og.gain.exponentialRampToValueAtTime(0.001, now+1.5);
-    o.connect(og); og.connect(audioCtx.destination); o.start(now); o.stop(now+1.5);
-    // 低音
-    const b = audioCtx.createOscillator(), bg = audioCtx.createGain();
-    b.type = 'sine'; b.frequency.setValueAtTime(60, now);
-    b.frequency.exponentialRampToValueAtTime(30, now+1);
-    bg.gain.setValueAtTime(4, now); bg.gain.exponentialRampToValueAtTime(0.001, now+1.2);
-    b.connect(bg); bg.connect(audioCtx.destination); b.start(now); b.stop(now+1.2);
-  } catch(e){}
 }
 </script>
 </body>
