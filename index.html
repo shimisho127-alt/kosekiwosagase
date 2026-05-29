@@ -120,15 +120,7 @@
     background: #eee;
     pointer-events: none;
   }
-  .face-btn .btn-name {
-    font-size: 11px;
-    color: #666;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
+
 
   /* wrong flash */
   .face-btn.wrong {
@@ -567,35 +559,50 @@ function buildGrid() {
   grid.innerHTML = '';
 
   const round = ROUNDS[currentRound];
-  // ランダム順でスロットをシャッフル
-  const slots = Array.from({length:6},(_,i)=>i).sort(()=>Math.random()-0.5);
-  // sekiはどこに来るかランダム（スロットのどこかに自然に入る）
-  // → シャッフルされた順でボタンを作るが、seki情報はROUNDS[].sekiで固定
-  // シャッフルして表示位置を変える（画像スロット番号はランダム配置）
   const order = Array.from({length:6},(_,i)=>i).sort(()=>Math.random()-0.5);
 
+  // ③ 先に全画像をプリロードしてから一気にグリッドを描画
+  let loaded = 0;
+  const total = 6;
+  const imgCache = {};
+
+  // ローディング表示
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa;font-size:13px;">読み込み中…</div>';
+
   order.forEach(slotIdx => {
-    const isSeki = slotIdx === round.seki;
-    const btn = document.createElement('button');
-    btn.className = 'face-btn';
-
-    const img = document.createElement('img');
-    img.src = imgPath(currentRound + 1, slotIdx + 1);
-    img.alt = round.names[slotIdx];
-    img.onerror = function() {
-      this.style.background = isSeki ? '#ffd6d6' : '#e8e8e8';
-      this.style.minHeight = '60px';
+    const src = imgPath(currentRound + 1, slotIdx + 1);
+    const preload = new Image();
+    preload.onload = preload.onerror = () => {
+      imgCache[slotIdx] = preload.naturalWidth > 0 ? src : null;
+      loaded++;
+      if (loaded === total) renderButtons();
     };
-
-    const nameEl = document.createElement('span');
-    nameEl.className = 'btn-name';
-    nameEl.textContent = round.names[slotIdx];
-
-    btn.appendChild(img);
-    btn.appendChild(nameEl);
-    btn.addEventListener('click', (e) => handleTap(e, btn, isSeki));
-    grid.appendChild(btn);
+    preload.src = src;
   });
+
+  function renderButtons() {
+    grid.innerHTML = '';
+    order.forEach(slotIdx => {
+      const isSeki = slotIdx === round.seki;
+      const btn = document.createElement('button');
+      btn.className = 'face-btn';
+
+      const img = document.createElement('img');
+      if (imgCache[slotIdx]) {
+        img.src = imgCache[slotIdx];
+      } else {
+        // 画像が読めなかった場合のフォールバック
+        img.style.background = '#ddd';
+        img.style.minHeight = '80px';
+      }
+      img.alt = '';
+      img.draggable = false;
+
+      btn.appendChild(img);
+      btn.addEventListener('click', (e) => handleTap(e, btn, isSeki));
+      grid.appendChild(btn);
+    });
+  }
 
   renderDots();
   applyGlitch();
