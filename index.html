@@ -6,451 +6,172 @@
 <title>小関を探せ！</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root { --red:#ff4757; --dark:#2f3542; --bg:#fdf6ee; }
+  body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); min-height:100vh; overflow-x:hidden; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  :root {
-    --bg: #fdf6ee;
-    --primary: #ff4757;
-    --dark: #2f3542;
-    --card: #ffffff;
-    --radius: 14px;
+  /* START SCREEN */
+  #start-screen {
+    position:fixed; inset:0; background:var(--dark);
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    gap:20px; z-index:9000; text-align:center; padding:32px;
   }
-
-  body {
-    font-family: 'Noto Sans JP', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    overflow-x: hidden;
+  #start-screen.hidden { display:none; }
+  #start-emoji { font-size:60px; animation:bounce 1.2s ease-in-out infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+  #start-screen h1 { color:#fff; font-size:28px; font-weight:900; letter-spacing:4px; }
+  #start-screen h1 span { color:var(--red); }
+  #start-screen p { color:#aaa; font-size:14px; line-height:1.8; }
+  #vol-hint {
+    background:#ffd32a22; border:1px solid #ffd32a88; color:#ffd32a;
+    font-size:13px; font-weight:700; padding:10px 24px; border-radius:30px;
+    animation:pulse 1.5s ease-in-out infinite;
   }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  #start-btn {
+    background:var(--red); color:#fff; border:none;
+    padding:18px 48px; font-family:'Noto Sans JP',sans-serif;
+    font-size:17px; font-weight:900; border-radius:50px; cursor:pointer;
+    letter-spacing:3px; box-shadow:0 6px 24px rgba(255,71,87,0.5);
+    -webkit-appearance:none;
+  }
+  #start-btn:active { transform:scale(0.95); }
 
-  /* ===== HEADER ===== */
+  /* GAME */
+  #game { display:none; }
+
   #header {
-    background: var(--dark);
-    padding: 14px 16px 12px;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    background:var(--dark); padding:14px 16px 12px;
+    text-align:center; position:sticky; top:0; z-index:100;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
   }
-  #header h1 {
-    color: #fff;
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 3px;
-  }
-  #header h1 span { color: var(--primary); }
+  #header h1 { color:#fff; font-size:18px; font-weight:900; letter-spacing:3px; }
+  #header h1 span { color:var(--red); }
 
-  /* ===== PROGRESS ===== */
-  #progress-area {
-    padding: 12px 16px 8px;
-    background: var(--dark);
-  }
-  #round-label {
-    color: #aaa;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-align: center;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-  }
-  #dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-  .dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #555;
-    transition: background 0.3s, transform 0.3s;
-  }
-  .dot.done { background: var(--primary); transform: scale(1.2); }
-  .dot.current { background: #ffd32a; transform: scale(1.3); box-shadow: 0 0 8px #ffd32a; }
+  #progress-area { background:var(--dark); padding:12px 16px 8px; }
+  #round-label { color:#aaa; font-size:11px; letter-spacing:2px; text-align:center; margin-bottom:6px; }
+  #dots { display:flex; justify-content:center; gap:8px; }
+  .dot { width:12px; height:12px; border-radius:50%; background:#555; transition:all 0.3s; }
+  .dot.done { background:var(--red); transform:scale(1.2); }
+  .dot.current { background:#ffd32a; transform:scale(1.3); box-shadow:0 0 8px #ffd32a; }
 
-  /* ===== INSTRUCTION ===== */
-  #instruction-bar {
-    background: #fff9e6;
-    border-bottom: 1px solid #ffe082;
-    padding: 9px 16px;
-    font-size: 12px;
-    color: #7a5c00;
-    text-align: center;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+  #inst-bar {
+    background:#fff9e6; border-bottom:1px solid #ffe082;
+    padding:9px 16px; font-size:12px; color:#7a5c00;
+    text-align:center; font-weight:700;
   }
 
-  /* ===== GRID WRAPPER ===== */
-  #grid-wrapper {
-    padding: 16px 12px 24px;
-  }
-
-  /* ===== BUTTON GRID ===== */
-  #button-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
+  #grid-wrapper { padding:16px 12px 24px; }
+  #button-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
 
   .face-btn {
-    background: var(--card);
-    border: 2px solid #e8e0d5;
-    border-radius: var(--radius);
-    padding: 8px 8px 6px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    position: relative;
-    overflow: visible;
-    transition: transform 0.12s, box-shadow 0.12s;
-    -webkit-appearance: none;
-    touch-action: manipulation;
+    background:#fff; border:2px solid #e8e0d5; border-radius:14px;
+    padding:8px; cursor:pointer; display:flex; flex-direction:column;
+    align-items:center; -webkit-appearance:none; touch-action:manipulation;
+    transition:transform 0.12s;
   }
-  .face-btn:active { transform: scale(0.94); }
-  .face-btn img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: cover;
-    border-radius: 8px;
-    display: block;
-    background: #eee;
-    pointer-events: none;
-  }
+  .face-btn:active { transform:scale(0.94); }
+  .face-btn img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; pointer-events:none; }
 
+  .face-btn.wrong { animation:wrongAnim 0.35s ease; }
+  @keyframes wrongAnim { 0%,100%{background:#fff;border-color:#e8e0d5} 40%{background:#ffe0e0;border-color:var(--red)} }
 
-  /* wrong flash */
-  .face-btn.wrong {
-    animation: wrongAnim 0.35s ease;
-  }
-  @keyframes wrongAnim {
-    0%,100% { background: #fff; border-color: #e8e0d5; }
-    40% { background: #ffe0e0; border-color: #ff4757; }
-  }
+  .face-btn.hit { animation:hitAnim 0.3s ease forwards; pointer-events:none; }
+  @keyframes hitAnim { 0%{transform:scale(1)} 40%{transform:scale(1.15)} 100%{transform:scale(0);opacity:0} }
 
-  /* hit animation */
-  .face-btn.hit {
-    animation: hitAnim 0.3s ease forwards;
-    pointer-events: none;
+  /* SPEECH BUBBLE */
+  #bubble {
+    display:none; position:fixed; z-index:500;
+    background:#fff; border:3px solid var(--red); border-radius:16px;
+    padding:10px 16px; font-size:15px; font-weight:900; color:var(--dark);
+    box-shadow:0 4px 20px rgba(255,71,87,0.3); pointer-events:none;
+    white-space:nowrap;
+    transform:translate(-50%,-100%) translateY(-14px);
+    animation:bubblePop 0.25s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
   }
-  @keyframes hitAnim {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.15); box-shadow: 0 0 20px rgba(255,71,87,0.5); }
-    100% { transform: scale(0); opacity: 0; }
-  }
+  #bubble::after { content:''; position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--red); }
+  #bubble::before { content:''; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#fff; z-index:1; }
+  @keyframes bubblePop { from{transform:translate(-50%,-100%) translateY(-14px) scale(0.5);opacity:0} to{transform:translate(-50%,-100%) translateY(-14px) scale(1);opacity:1} }
 
-  /* ===== SPEECH BUBBLE ===== */
-  #speech-bubble {
-    display: none;
-    position: fixed;
-    z-index: 500;
-    background: #fff;
-    border: 3px solid var(--primary);
-    border-radius: 16px;
-    padding: 10px 16px;
-    font-size: 15px;
-    font-weight: 900;
-    color: var(--dark);
-    box-shadow: 0 4px 20px rgba(255,71,87,0.3);
-    pointer-events: none;
-    white-space: nowrap;
-    transform: translate(-50%, -100%) translateY(-14px);
-    animation: bubblePop 0.25s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
-  }
-  #speech-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top-color: var(--primary);
-  }
-  #speech-bubble::before {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: #fff;
-    z-index: 1;
-  }
-  @keyframes bubblePop {
-    from { transform: translate(-50%, -100%) translateY(-14px) scale(0.5); opacity: 0; }
-    to   { transform: translate(-50%, -100%) translateY(-14px) scale(1);   opacity: 1; }
-  }
+  /* GLITCH */
+  body.glitch1 #header h1 { animation:gTitle 5s infinite; }
+  @keyframes gTitle { 0%,88%,100%{text-shadow:none} 89%{text-shadow:2px 0 var(--red),-2px 0 #00d2d3} 90%{text-shadow:-2px 0 var(--red),2px 0 #00d2d3} 91%{text-shadow:none} }
+  body.glitch2 #button-grid { animation:gGrid 3s infinite; }
+  @keyframes gGrid { 0%,90%,100%{transform:none} 92%{transform:translateX(3px)} 94%{transform:translateX(-3px)} 96%{transform:none} }
+  body.glitch3 #grid-wrapper { animation:gHeavy 1.2s infinite; }
+  @keyframes gHeavy { 0%,100%{transform:none} 15%{transform:translateX(-5px) translateY(2px)} 30%{transform:translateX(5px) translateY(-2px)} 45%{transform:translateX(-3px)} 60%{transform:translateX(3px)} 75%{transform:none} }
+  body.glitch3 #header { filter:hue-rotate(180deg); }
 
-  /* ===== ROUND TRANSITION ===== */
-  #round-flash {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(255,71,87,0.15);
-    z-index: 400;
-    pointer-events: none;
-    animation: flashFade 0.4s ease forwards;
+  /* SCARE */
+  #scare {
+    display:none; position:fixed; inset:0; background:#000; z-index:9999;
+    flex-direction:column; justify-content:center; align-items:center;
   }
-  @keyframes flashFade {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
+  #scare.active { display:flex; }
+  #scare img {
+    max-width:95vw; max-height:75vh; object-fit:contain;
+    border:3px solid var(--red); box-shadow:0 0 40px var(--red),0 0 80px var(--red);
+    animation:scareIn 0.25s ease-out forwards, scareShake 0.15s infinite 0.25s;
   }
-
-  /* ===== GLITCH PHASE ===== */
-  body.glitch-mild #header h1 { animation: glitchTitle 5s infinite; }
-  @keyframes glitchTitle {
-    0%,88%,100% { text-shadow: none; }
-    89% { text-shadow: 2px 0 #ff4757, -2px 0 #00d2d3; }
-    90% { text-shadow: -2px 0 #ff4757, 2px 0 #00d2d3; }
-    91% { text-shadow: none; }
-  }
-
-  body.glitch-mid { background: #f0e8e0; }
-  body.glitch-mid #button-grid { animation: gridWobble 3s infinite; }
-  @keyframes gridWobble {
-    0%,90%,100% { transform: none; }
-    92% { transform: translateX(3px); }
-    94% { transform: translateX(-3px); }
-    96% { transform: none; }
-  }
-  body.glitch-mid #instruction-bar {
-    font-family: monospace;
-    color: #c00;
-    background: #fff0f0;
-  }
-
-  body.glitch-heavy #grid-wrapper { animation: heavyShake 1.2s infinite; }
-  @keyframes heavyShake {
-    0%,100% { transform: none; }
-    15% { transform: translateX(-5px) translateY(2px); }
-    30% { transform: translateX(5px) translateY(-2px); }
-    45% { transform: translateX(-3px); }
-    60% { transform: translateX(3px); }
-    75% { transform: none; }
-  }
-  body.glitch-heavy #header { filter: hue-rotate(180deg); }
-  body.glitch-heavy #instruction-bar {
-    font-family: monospace;
-    letter-spacing: 0;
-    animation: instrGlitch 0.6s infinite;
-  }
-  @keyframes instrGlitch {
-    0%,100% { color: #c00; }
-    50% { color: #00c; letter-spacing: 3px; }
-  }
-
-  /* ===== SCARE OVERLAY ===== */
-  #scare-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: #000;
-    z-index: 9999;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    animation: scarePulse 0.1s infinite;
-  }
-  #scare-overlay.active { display: flex; }
-  @keyframes scarePulse {
-    0%,100% { background: #000; }
-    50% { background: #0a0000; }
-  }
-  #scare-img {
-    max-width: 95vw;
-    max-height: 75vh;
-    object-fit: contain;
-    border: 3px solid #ff4757;
-    box-shadow: 0 0 40px #ff4757, 0 0 80px #ff4757;
-    animation: scareAppear 0.25s ease-out forwards, imgShake 0.15s infinite 0.25s;
-  }
-  @keyframes scareAppear {
-    from { transform: scale(0.2) rotate(-5deg); opacity: 0; }
-    to   { transform: scale(1) rotate(0deg); opacity: 1; }
-  }
-  @keyframes imgShake {
-    0%,100% { transform: scale(1) rotate(0deg); }
-    33% { transform: scale(1.02) rotate(-0.8deg); }
-    66% { transform: scale(0.99) rotate(0.8deg); }
-  }
-  #scare-text {
-    color: #ff4757;
-    font-size: 28px;
-    font-weight: 900;
-    margin-top: 18px;
-    letter-spacing: 6px;
-    text-shadow: 0 0 16px #ff4757;
-    animation: textBlink 0.4s infinite;
-  }
-  @keyframes textBlink {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
-  #restart-btn {
-    display: none;
-    margin-top: 24px;
-    background: #ff4757;
-    color: #fff;
-    border: none;
-    padding: 14px 40px;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 15px;
-    font-weight: 900;
-    border-radius: 30px;
-    cursor: pointer;
-    letter-spacing: 3px;
-    box-shadow: 0 4px 20px rgba(255,71,87,0.5);
-    -webkit-appearance: none;
-  }
-
-  /* ===== START SCREEN ===== */
-  #start-screen {
-    position: fixed;
-    inset: 0;
-    background: var(--dark);
-    z-index: 8000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-  }
-  #start-screen.hidden { display: none; }
-  #start-inner {
-    text-align: center;
-    padding: 32px 28px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-  }
-  #start-emoji {
-    font-size: 64px;
-    animation: startBounce 1.2s ease-in-out infinite;
-  }
-  @keyframes startBounce {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
-  }
-  #start-title {
-    color: #fff;
-    font-size: 30px;
-    font-weight: 900;
-    letter-spacing: 4px;
-  }
-  #start-title span { color: var(--primary); }
-  #start-sub {
-    color: #aaa;
-    font-size: 14px;
-    line-height: 1.8;
-  }
-  #start-volume-hint {
-    background: #ffd32a22;
-    border: 1px solid #ffd32a66;
-    color: #ffd32a;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 10px 20px;
-    border-radius: 30px;
-    letter-spacing: 1px;
-    animation: hintPulse 1.5s ease-in-out infinite;
-  }
-  @keyframes hintPulse {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  #start-btn {
-    margin-top: 8px;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 18px 48px;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 17px;
-    font-weight: 900;
-    border-radius: 50px;
-    cursor: pointer;
-    letter-spacing: 3px;
-    box-shadow: 0 6px 24px rgba(255,71,87,0.5);
-    -webkit-appearance: none;
-    animation: btnGlow 1.5s ease-in-out infinite;
-  }
-  @keyframes btnGlow {
-    0%,100% { box-shadow: 0 6px 24px rgba(255,71,87,0.5); }
-    50% { box-shadow: 0 6px 40px rgba(255,71,87,0.9); }
-  }
-  #start-btn:active { transform: scale(0.95); }
+  @keyframes scareIn { from{transform:scale(0.2) rotate(-5deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
+  @keyframes scareShake { 0%,100%{transform:scale(1) rotate(0)} 33%{transform:scale(1.02) rotate(-0.8deg)} 66%{transform:scale(0.99) rotate(0.8deg)} }
+  #scare-text { color:var(--red); font-size:28px; font-weight:900; margin-top:18px; letter-spacing:6px; text-shadow:0 0 16px var(--red); animation:textBlink 0.4s infinite; }
+  @keyframes textBlink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  #restart-btn { display:none; margin-top:24px; background:var(--red); color:#fff; border:none; padding:14px 40px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:900; border-radius:30px; cursor:pointer; letter-spacing:3px; -webkit-appearance:none; }
 </style>
 </head>
 <body>
 
-<!-- START SCREEN -->
+<!-- START -->
 <div id="start-screen">
-  <div id="start-inner">
-    <div id="start-emoji">🔍</div>
-    <h2 id="start-title">小関を<span>探せ！</span></h2>
-    <p id="start-sub">7ラウンド・全6人の中から<br>小関を見つけてタップ！</p>
-    <div id="start-volume-hint">🔊 音量を上げてからスタート！</div>
-    <button id="start-btn" onclick="startGame()">タップしてスタート</button>
+  <div id="start-emoji">🔍</div>
+  <h1>小関を<span>探せ！</span></h1>
+  <p>7ラウンド・6人の中から<br>小関を見つけてタップ！</p>
+  <div id="vol-hint">🔊 音量を上げてからスタート！</div>
+  <button id="start-btn" onclick="startGame()">タップしてスタート</button>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div id="header"><h1>小関を<span>探せ！</span></h1></div>
+  <div id="progress-area">
+    <div id="round-label">ROUND <span id="round-num">1</span> / 7</div>
+    <div id="dots"></div>
+  </div>
+  <div id="inst-bar">👆 小関をタップして！</div>
+  <div id="grid-wrapper">
+    <div id="button-grid"></div>
   </div>
 </div>
 
-<header id="header" style="display:none">
-  <h1>小関を<span>探せ！</span></h1>
-</header>
-
-<div id="progress-area" style="display:none">
-  <div id="round-label">ROUND <span id="round-num">1</span> / 7</div>
-  <div id="dots"></div>
-</div>
-
-<div id="instruction-bar" style="display:none">👆 小関をタップして！</div>
-
-<div id="grid-wrapper" style="display:none">
-  <div id="button-grid"></div>
-</div>
-
-<div id="speech-bubble"></div>
-<div id="round-flash"></div>
+<!-- BUBBLE -->
+<div id="bubble"></div>
 
 <!-- SCARE -->
-<div id="scare-overlay">
-  <img id="scare-img" src="images/seki_scare.jpg" alt="">
+<div id="scare">
+  <img id="scare-img" src="" alt="">
   <div id="scare-text">みつけた👁</div>
-  <button id="restart-btn" onclick="restartGame()">もう一度？</button>
+  <button id="restart-btn" onclick="location.reload()">もう一度？</button>
 </div>
 
 <script>
-// =====================================================
-//  画像設定
-//  ・各ラウンドに6枚（うち1枚が小関）
-//  ・7ラウンド分 → images/r1_1.jpg 〜 images/r7_6.jpg
-//  ・小関の画像は各ラウンドで sekiIndex で指定（0〜5）
-// =====================================================
-const TOTAL_ROUNDS = 7;
-
-// ラウンドごとの設定
+// ==============================
+// 設定
+// ==============================
+// 各ラウンドの小関スロット番号（1〜6）
+// 例: sekiSlot:4 → r1_4.jpg が小関
 const ROUNDS = [
-  { seki: 3, names: ['Aさん','Bさん','Cさん','小関','Dさん','Eさん'] },
-  { seki: 1, names: ['Fさん','小関','Gさん','Hさん','Iさん','Jさん'] },
-  { seki: 5, names: ['Kさん','Lさん','Mさん','Nさん','Oさん','小関'] },
-  { seki: 0, names: ['小関','Pさん','Qさん','Rさん','Sさん','Tさん'] },
-  { seki: 4, names: ['Uさん','Vさん','Wさん','Xさん','小関','Yさん'] },
-  { seki: 2, names: ['Zさん','AAさん','小関','BBさん','CCさん','DDさん'] },
-  { seki: 3, names: ['EEさん','FFさん','GGさん','小関','HHさん','IIさん'] },
+  { sekiSlot: 4 },
+  { sekiSlot: 2 },
+  { sekiSlot: 6 },
+  { sekiSlot: 1 },
+  { sekiSlot: 5 },
+  { sekiSlot: 3 },
+  { sekiSlot: 4 },
 ];
 
-// 各ラウンドの画像パス
-// images/r{round}_{slot}.jpg （round=1〜7, slot=1〜6）
-function imgPath(round, slot) {
-  return `images/r${round}_${slot}.jpg`;
-}
-// ジャンプスケア画像
-const SCARE_IMG = 'images/seki_scare.jpg';
+const SCARE_SRC = 'images/seki_scare.jpg';
 
-// 小関のセリフ
 const SEKI_LINES = [
   'うぇ〜ん😭',
   '見つかっちゃったよ〜',
@@ -461,315 +182,196 @@ const SEKI_LINES = [
   'ひどい…',
 ];
 
-// グリッチフェーズのセリフ（後半ラウンド用）
-const GLITCH_LINES = [
-  'な、なんか画面おかしくない…？',
-  '…ねえ、気のせい？',
-  '▓▒░ 見 つ け た ░▒▓',
-];
-
-// =====================================================
-//  状態
-// =====================================================
-let currentRound = 0;
+// ==============================
+// 状態
+// ==============================
+let round = 0;
 let audioCtx = null;
 let bubbleTimer = null;
 
-// =====================================================
-//  AudioContext（Autoplay Policy対策）
-// =====================================================
-function ensureAudio() {
+// ==============================
+// Audio
+// ==============================
+function initAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-// スタート画面のボタンを押したときに呼ぶ
-// → ここでAudioContextを起動＆無音バッファを再生して音量をウォームアップ
+// ==============================
+// スタート
+// ==============================
 function startGame() {
-  // AudioContext起動
-  ensureAudio();
-
-  // 無音バッファを再生してブラウザの音量制限を解除
+  initAudio();
+  // 無音再生でウォームアップ
   try {
-    const silentBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
-    const silentSrc = audioCtx.createBufferSource();
-    silentSrc.buffer = silentBuf;
-    silentSrc.connect(audioCtx.destination);
-    silentSrc.start();
-  } catch(e) {}
+    const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start();
+  } catch(e){}
 
-  // スタート画面を隠してゲームを表示
   document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('header').style.display = '';
-  document.getElementById('progress-area').style.display = '';
-  document.getElementById('instruction-bar').style.display = '';
-  document.getElementById('grid-wrapper').style.display = '';
+  document.getElementById('game').style.display = 'block';
 
   // ジャンプスケア画像を先読み
-  const scarePreload = new Image();
-  scarePreload.src = SCARE_IMG;
-  scarePreload.onload = () => {
-    document.getElementById('scare-img').src = SCARE_IMG;
-  };
+  const preScareImg = document.getElementById('scare-img');
+  preScareImg.src = SCARE_SRC;
 
   buildGrid();
 }
 
-// =====================================================
-//  ドット（進捗）描画
-// =====================================================
-function renderDots() {
-  const container = document.getElementById('dots');
-  container.innerHTML = '';
-  for (let i = 0; i < TOTAL_ROUNDS; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i < currentRound ? ' done' : i === currentRound ? ' current' : '');
-    container.appendChild(d);
-  }
-  document.getElementById('round-num').textContent = currentRound + 1;
-}
-
-// =====================================================
-//  グリッチフェーズ適用
-// =====================================================
-function applyGlitch() {
-  document.body.classList.remove('glitch-mild','glitch-mid','glitch-heavy');
-  const inst = document.getElementById('instruction-bar');
-
-  if (currentRound >= 5) {
-    document.body.classList.add('glitch-heavy');
-    inst.textContent = glitchText('小関をタップして！');
-  } else if (currentRound >= 3) {
-    document.body.classList.add('glitch-mid');
-    inst.textContent = '👆 小関をタップ' + glitchChar(3) + 'して！';
-  } else if (currentRound >= 2) {
-    document.body.classList.add('glitch-mild');
-    inst.textContent = '👆 小関をタップして！';
-  } else {
-    inst.textContent = '👆 小関をタップして！';
-  }
-}
-
-const GCHARS = '█▓▒░$#@!?※ĦΩ∑∏≈';
-function glitchChar(n) {
-  return Array.from({length:n},()=>GCHARS[Math.floor(Math.random()*GCHARS.length)]).join('');
-}
-function glitchText(base) {
-  return base.split('').map(c => Math.random() < 0.3 ? glitchChar(1) : c).join('');
-}
-
-// =====================================================
-//  グリッド描画
-// =====================================================
+// ==============================
+// グリッド構築
+// ==============================
 function buildGrid() {
+  const cfg = ROUNDS[round];
+  const sekiSlot = cfg.sekiSlot; // 1〜6
+
+  // 表示順をシャッフル（スロット番号1〜6をランダム並び替え）
+  const slots = [1,2,3,4,5,6].sort(() => Math.random() - 0.5);
+
+  // ドット更新
+  const dotsEl = document.getElementById('dots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < round ? ' done' : i === round ? ' current' : '');
+    dotsEl.appendChild(d);
+  }
+  document.getElementById('round-num').textContent = round + 1;
+
+  // グリッチ
+  document.body.className = '';
+  if (round >= 5) document.body.classList.add('glitch3');
+  else if (round >= 3) document.body.classList.add('glitch2');
+  else if (round >= 2) document.body.classList.add('glitch1');
+
+  // グリッド描画
   const grid = document.getElementById('button-grid');
   grid.innerHTML = '';
 
-  const round = ROUNDS[currentRound];
-  // スロット0〜5をシャッフルして表示順を決める
-  const order = Array.from({length:6},(_,i)=>i).sort(()=>Math.random()-0.5);
+  slots.forEach(slotNum => {
+    const isSeki = (slotNum === sekiSlot);
+    const src = `images/r${round + 1}_${slotNum}.jpg`;
 
-  renderDots();
-  applyGlitch();
+    const btn = document.createElement('button');
+    btn.className = 'face-btn';
 
-  // ローディング表示
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa;font-size:13px;">読み込み中…</div>';
+    const img = document.createElement('img');
+    img.src = src;
 
-  // 全6枚プリロード完了後にまとめて描画
-  let loaded = 0;
-
-  order.forEach(slotIdx => {
-    const preload = new Image();
-    preload.onload = () => { loaded++; if (loaded === 6) renderButtons(); };
-    preload.onerror = () => { loaded++; if (loaded === 6) renderButtons(); };
-    preload.src = imgPath(currentRound + 1, slotIdx + 1);
+    btn.appendChild(img);
+    btn.addEventListener('click', e => onTap(e, btn, isSeki));
+    grid.appendChild(btn);
   });
-
-  function renderButtons() {
-    grid.innerHTML = '';
-    order.forEach(slotIdx => {
-      const isSeki = (slotIdx === round.seki);
-      const btn = document.createElement('button');
-      btn.className = 'face-btn';
-
-      const img = document.createElement('img');
-      img.src = imgPath(currentRound + 1, slotIdx + 1);
-      img.alt = '';
-      img.draggable = false;
-
-      btn.appendChild(img);
-      btn.addEventListener('click', (e) => handleTap(e, btn, isSeki));
-      grid.appendChild(btn);
-    });
-  }
 }
 
-// =====================================================
-//  タップ処理
-// =====================================================
-function handleTap(e, btn, isSeki) {
-  ensureAudio();
-
+// ==============================
+// タップ
+// ==============================
+function onTap(e, btn, isSeki) {
+  initAudio();
   if (isSeki) {
-    // 正解！
-    playHitSound();
-    showBubble(e, currentRound >= 5
-      ? GLITCH_LINES[Math.floor(Math.random() * GLITCH_LINES.length)]
-      : SEKI_LINES[currentRound] || SEKI_LINES[Math.floor(Math.random()*SEKI_LINES.length)]
-    );
+    playHit();
+    showBubble(e, SEKI_LINES[round] || SEKI_LINES[0]);
     btn.classList.add('hit');
-
-    currentRound++;
-
-    if (currentRound >= TOTAL_ROUNDS) {
+    round++;
+    if (round >= 7) {
       setTimeout(triggerScare, 700);
     } else {
-      setTimeout(() => {
-        showRoundFlash();
-        buildGrid();
-      }, 600);
+      setTimeout(buildGrid, 600);
     }
   } else {
-    // 不正解
     btn.classList.add('wrong');
-    btn.addEventListener('animationend', () => btn.classList.remove('wrong'), { once: true });
-    playMissSound();
+    btn.addEventListener('animationend', () => btn.classList.remove('wrong'), {once:true});
+    playMiss();
   }
 }
 
-// =====================================================
-//  吹き出し
-// =====================================================
+// ==============================
+// 吹き出し
+// ==============================
 function showBubble(e, text) {
   if (bubbleTimer) clearTimeout(bubbleTimer);
-  const bubble = document.getElementById('speech-bubble');
-  bubble.textContent = text;
-
-  // タップ位置に表示
-  const touch = e.touches ? e.touches[0] : e;
-  bubble.style.left = (touch.clientX || touch.pageX || window.innerWidth/2) + 'px';
-  bubble.style.top  = (touch.clientY || touch.pageY || window.innerHeight/2) + 'px';
-  bubble.style.display = 'block';
-  // アニメーションリセット
-  bubble.style.animation = 'none';
-  bubble.offsetHeight;
-  bubble.style.animation = '';
-
-  bubbleTimer = setTimeout(() => { bubble.style.display = 'none'; }, 1600);
+  const b = document.getElementById('bubble');
+  b.textContent = text;
+  const t = e.changedTouches ? e.changedTouches[0] : e;
+  b.style.left = (t.clientX || window.innerWidth/2) + 'px';
+  b.style.top  = (t.clientY || window.innerHeight/2) + 'px';
+  b.style.display = 'block';
+  void b.offsetWidth; // reflow
+  b.style.animation = 'none';
+  void b.offsetWidth;
+  b.style.animation = '';
+  bubbleTimer = setTimeout(() => b.style.display = 'none', 1600);
 }
 
-// =====================================================
-//  ラウンド切り替えフラッシュ
-// =====================================================
-function showRoundFlash() {
-  const el = document.getElementById('round-flash');
-  el.style.display = 'block';
-  el.style.animation = 'none';
-  el.offsetHeight;
-  el.style.animation = 'flashFade 0.4s ease forwards';
-  el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
-}
-
-// =====================================================
-//  ジャンプスケア
-// =====================================================
+// ==============================
+// ジャンプスケア
+// ==============================
 function triggerScare() {
-  playScareSoundFull();
-  document.getElementById('scare-overlay').classList.add('active');
-  setTimeout(() => {
-    document.getElementById('restart-btn').style.display = 'block';
-  }, 2500);
+  playScream();
+  document.getElementById('scare').classList.add('active');
+  setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
 }
 
-// =====================================================
-//  サウンド
-// =====================================================
-function playHitSound() {
+// ==============================
+// 音
+// ==============================
+function playHit() {
   try {
-    ensureAudio();
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
+    initAudio();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(600, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
     g.gain.setValueAtTime(0.4, audioCtx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-    osc.connect(g); g.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.2);
   } catch(e){}
 }
 
-function playMissSound() {
+function playMiss() {
   try {
-    ensureAudio();
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
+    initAudio();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(200, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
     g.gain.setValueAtTime(0.3, audioCtx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-    osc.connect(g); g.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.2);
   } catch(e){}
 }
 
-function playScareSoundFull() {
+function playScream() {
   try {
-    ensureAudio();
+    initAudio();
     const now = audioCtx.currentTime;
-
-    // ノイズ爆発
+    // ノイズ
     const bufLen = audioCtx.sampleRate * 2;
     const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < bufLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/bufLen, 0.3);
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buf;
-    const ng = audioCtx.createGain();
-    ng.gain.setValueAtTime(6, now);
-    ng.gain.exponentialRampToValueAtTime(0.001, now+2);
-    noise.connect(ng); ng.connect(audioCtx.destination);
-    noise.start(now);
-
+    const ns = audioCtx.createBufferSource(), ng = audioCtx.createGain();
+    ns.buffer = buf;
+    ng.gain.setValueAtTime(6, now); ng.gain.exponentialRampToValueAtTime(0.001, now+2);
+    ns.connect(ng); ng.connect(audioCtx.destination); ns.start(now);
     // スクリーム
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(1200, now);
-    osc.frequency.exponentialRampToValueAtTime(150, now+1.5);
-    const og = audioCtx.createGain();
-    og.gain.setValueAtTime(2.5, now);
-    og.gain.exponentialRampToValueAtTime(0.001, now+1.5);
-    osc.connect(og); og.connect(audioCtx.destination);
-    osc.start(now); osc.stop(now+1.5);
-
+    const o = audioCtx.createOscillator(), og = audioCtx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(1200, now);
+    o.frequency.exponentialRampToValueAtTime(150, now+1.5);
+    og.gain.setValueAtTime(2.5, now); og.gain.exponentialRampToValueAtTime(0.001, now+1.5);
+    o.connect(og); og.connect(audioCtx.destination); o.start(now); o.stop(now+1.5);
     // 低音
-    const bass = audioCtx.createOscillator();
-    bass.type = 'sine';
-    bass.frequency.setValueAtTime(60, now);
-    bass.frequency.exponentialRampToValueAtTime(30, now+1);
-    const bg = audioCtx.createGain();
-    bg.gain.setValueAtTime(4, now);
-    bg.gain.exponentialRampToValueAtTime(0.001, now+1.2);
-    bass.connect(bg); bg.connect(audioCtx.destination);
-    bass.start(now); bass.stop(now+1.2);
+    const b = audioCtx.createOscillator(), bg = audioCtx.createGain();
+    b.type = 'sine'; b.frequency.setValueAtTime(60, now);
+    b.frequency.exponentialRampToValueAtTime(30, now+1);
+    bg.gain.setValueAtTime(4, now); bg.gain.exponentialRampToValueAtTime(0.001, now+1.2);
+    b.connect(bg); bg.connect(audioCtx.destination); b.start(now); b.stop(now+1.2);
   } catch(e){}
 }
-
-// =====================================================
-//  リスタート
-// =====================================================
-function restartGame() {
-  currentRound = 0;
-  document.body.className = '';
-  document.getElementById('scare-overlay').classList.remove('active');
-  document.getElementById('restart-btn').style.display = 'none';
-  buildGrid();
-}
-
-// =====================================================
-//  起動（startGame() から呼ばれる）
-// =====================================================
 </script>
 </body>
 </html>
