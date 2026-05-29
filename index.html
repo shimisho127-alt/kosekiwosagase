@@ -243,17 +243,20 @@ function startGame() {
   // ユーザー操作の直後にAudioを初期化
   initAudio();
 
-  // iOS Safari対策：全音声を一瞬再生してアンロック
-  [bgmNormal, bgmCreepy, sfxHit, sfxScare].forEach(a => {
+  // iOS Safari対策：scareとhitだけ無音でアンロック（BGMは除く）
+  [sfxHit, sfxScare].forEach(a => {
+    const originalVolume = a.volume;
     a.volume = 0;
-    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(e => console.log('unlock error:', e));
+    a.play().then(() => {
+      a.pause();
+      a.currentTime = 0;
+      a.volume = originalVolume;
+    }).catch(()=>{});
   });
 
-  // BGMを正しい音量で再生
+  // BGMを再生
   bgmNormal.volume = 0.5;
-  bgmNormal.play()
-    .then(() => console.log('BGM再生成功！'))
-    .catch(e => console.log('BGM再生失敗:', e));
+  bgmNormal.play().catch(()=>{});
 
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game').style.display = 'block';
