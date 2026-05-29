@@ -332,10 +332,8 @@ function onTap(e, btn, isSeki) {
 
     if (round >= 7) {
       // ジャンプスケアはタップ直後に実行（スマホ対応）
-      stopAllBgm();
-      playScream();
-      document.getElementById('scare').classList.add('active');
-      setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
+      // BGMを0.6秒でフェードアウト → 0.3秒無音 → 爆音＋画像
+      fadeBgmThenScare();
     } else {
       setTimeout(buildGrid, 600);
     }
@@ -362,6 +360,37 @@ function showBubble(e, text) {
   b.style.animation = '';
   bubbleTimer = setTimeout(() => b.style.display = 'none', 1600);
 }
+// ==============================
+// BGMフェードアウト → 無音 → ジャンプスケア
+// ==============================
+function fadeBgmThenScare() {
+  const fadeStep = 50; // ms
+  const fadeDuration = 600; // ms
+  const steps = fadeDuration / fadeStep;
+  let step = 0;
+
+  const initialNormal = bgmNormal ? bgmNormal.volume : 0;
+  const initialCreepy = bgmCreepy ? bgmCreepy.volume : 0;
+
+  const fadeTimer = setInterval(() => {
+    step++;
+    const ratio = 1 - step / steps;
+    if (bgmNormal) bgmNormal.volume = Math.max(0, initialNormal * ratio);
+    if (bgmCreepy) bgmCreepy.volume = Math.max(0, initialCreepy * ratio);
+
+    if (step >= steps) {
+      clearInterval(fadeTimer);
+      stopAllBgm();
+      // 無音0.3秒
+      setTimeout(() => {
+        playScream();
+        document.getElementById('scare').classList.add('active');
+        setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
+      }, 300);
+    }
+  }, fadeStep);
+}
+
 // ==============================
 // ジャンプスケア爆音（Web Audio API）
 // ==============================
