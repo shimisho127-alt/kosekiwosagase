@@ -187,24 +187,33 @@ let round = 0;
 let bubbleTimer = null;
 
 // ==============================
-// 音声（mp3）
+// 音声（mp3）- スタート時に生成
 // ==============================
-const bgmNormal = new Audio('sounds/bgm_normal.mp3');
-bgmNormal.loop = true;
-bgmNormal.volume = 0.5;
-
-const bgmCreepy = new Audio('sounds/bgm_creepy.mp3');
-bgmCreepy.loop = true;
-bgmCreepy.volume = 0.0; // フェードインで上げる
-
-const sfxHit   = new Audio('sounds/hit.mp3');
-const sfxScare = new Audio('sounds/scare.mp3');
-sfxScare.volume = 1.0;
-
+let bgmNormal = null;
+let bgmCreepy = null;
+let sfxHit    = null;
+let sfxScare  = null;
 let bgmFadeTimer = null;
 
-// BGM切り替え：normalをフェードアウト、creepyをフェードイン
+function initAudio() {
+  // ユーザー操作の直後に呼ぶことでスマホでも再生できる
+  bgmNormal = new Audio('sounds/bgm_normal.mp3');
+  bgmNormal.loop = true;
+  bgmNormal.volume = 0.5;
+
+  bgmCreepy = new Audio('sounds/bgm_creepy.mp3');
+  bgmCreepy.loop = true;
+  bgmCreepy.volume = 0.0;
+
+  sfxHit = new Audio('sounds/hit.mp3');
+  sfxHit.volume = 0.8;
+
+  sfxScare = new Audio('sounds/scare.mp3');
+  sfxScare.volume = 1.0;
+}
+
 function switchToCreepy() {
+  if (!bgmNormal || !bgmCreepy) return;
   if (bgmFadeTimer) clearInterval(bgmFadeTimer);
   bgmCreepy.currentTime = 0;
   bgmCreepy.play().catch(()=>{});
@@ -223,22 +232,24 @@ function switchToCreepy() {
 
 function stopAllBgm() {
   if (bgmFadeTimer) clearInterval(bgmFadeTimer);
-  bgmNormal.pause();
-  bgmCreepy.pause();
+  if (bgmNormal) bgmNormal.pause();
+  if (bgmCreepy) bgmCreepy.pause();
 }
 
 // ==============================
 // スタート
 // ==============================
 function startGame() {
+  // ユーザー操作の直後にAudioを初期化（スマホ対応の要）
+  initAudio();
+
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game').style.display = 'block';
 
   // ジャンプスケア画像を先読み
   document.getElementById('scare-img').src = SCARE_SRC;
 
-  // BGM再生（ユーザー操作直後なので再生できる）
-  bgmNormal.currentTime = 0;
+  // BGM再生
   bgmNormal.play().catch(()=>{});
 
   buildGrid();
@@ -295,8 +306,7 @@ function buildGrid() {
 function onTap(e, btn, isSeki) {
   if (isSeki) {
     // 正解音
-    sfxHit.currentTime = 0;
-    sfxHit.play().catch(()=>{});
+    if (sfxHit) { sfxHit.currentTime = 0; sfxHit.play().catch(()=>{}); }
 
     showBubble(e, SEKI_LINES[round] || SEKI_LINES[0]);
     btn.classList.add('hit');
@@ -305,8 +315,7 @@ function onTap(e, btn, isSeki) {
     if (round >= 7) {
       // ジャンプスケアはタップ直後に実行（スマホ対応）
       stopAllBgm();
-      sfxScare.currentTime = 0;
-      sfxScare.play().catch(()=>{});
+      if (sfxScare) { sfxScare.currentTime = 0; sfxScare.play().catch(()=>{}); }
       document.getElementById('scare').classList.add('active');
       setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
     } else {
