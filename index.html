@@ -10,7 +10,7 @@
   :root { --red:#ff4757; --dark:#2f3542; --bg:#fdf6ee; }
   body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); min-height:100vh; overflow-x:hidden; }
 
-  /* START SCREEN */
+  /* START */
   #start-screen {
     position:fixed; inset:0; background:var(--dark);
     display:flex; flex-direction:column; justify-content:center; align-items:center;
@@ -22,76 +22,37 @@
   #start-screen h1 { color:#fff; font-size:28px; font-weight:900; letter-spacing:4px; }
   #start-screen h1 span { color:var(--red); }
   #start-screen p { color:#aaa; font-size:14px; line-height:1.8; }
-  #vol-hint {
-    background:#ffd32a22; border:1px solid #ffd32a88; color:#ffd32a;
-    font-size:13px; font-weight:700; padding:10px 24px; border-radius:30px;
-    animation:pulse 1.5s ease-in-out infinite;
-  }
+  #vol-hint { background:#ffd32a22; border:1px solid #ffd32a88; color:#ffd32a; font-size:13px; font-weight:700; padding:10px 24px; border-radius:30px; animation:pulse 1.5s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  #start-btn {
-    background:var(--red); color:#fff; border:none;
-    padding:18px 48px; font-family:'Noto Sans JP',sans-serif;
-    font-size:17px; font-weight:900; border-radius:50px; cursor:pointer;
-    letter-spacing:3px; box-shadow:0 6px 24px rgba(255,71,87,0.5);
-    -webkit-appearance:none;
-  }
+  #start-btn { background:var(--red); color:#fff; border:none; padding:18px 48px; font-family:'Noto Sans JP',sans-serif; font-size:17px; font-weight:900; border-radius:50px; cursor:pointer; letter-spacing:3px; box-shadow:0 6px 24px rgba(255,71,87,0.5); -webkit-appearance:none; }
   #start-btn:active { transform:scale(0.95); }
 
   /* GAME */
   #game { display:none; }
-
-  #header {
-    background:var(--dark); padding:14px 16px 12px;
-    text-align:center; position:sticky; top:0; z-index:100;
-    box-shadow:0 2px 8px rgba(0,0,0,0.3);
-  }
+  #header { background:var(--dark); padding:14px 16px 12px; text-align:center; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
   #header h1 { color:#fff; font-size:18px; font-weight:900; letter-spacing:3px; }
   #header h1 span { color:var(--red); }
-
   #progress-area { background:var(--dark); padding:12px 16px 8px; }
   #round-label { color:#aaa; font-size:11px; letter-spacing:2px; text-align:center; margin-bottom:6px; }
   #dots { display:flex; justify-content:center; gap:8px; }
   .dot { width:12px; height:12px; border-radius:50%; background:#555; transition:all 0.3s; }
   .dot.done { background:var(--red); transform:scale(1.2); }
   .dot.current { background:#ffd32a; transform:scale(1.3); box-shadow:0 0 8px #ffd32a; }
-
-  #inst-bar {
-    background:#fff9e6; border-bottom:1px solid #ffe082;
-    padding:9px 16px; font-size:12px; color:#7a5c00;
-    text-align:center; font-weight:700;
-  }
-
+  #inst-bar { background:#fff9e6; border-bottom:1px solid #ffe082; padding:9px 16px; font-size:12px; color:#7a5c00; text-align:center; font-weight:700; }
   #grid-wrapper { padding:16px 12px 24px; }
   #button-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-
-  .face-btn {
-    background:#fff; border:2px solid #e8e0d5; border-radius:14px;
-    padding:8px; cursor:pointer; display:flex; flex-direction:column;
-    align-items:center; -webkit-appearance:none; touch-action:manipulation;
-    transition:transform 0.12s;
-  }
+  .face-btn { background:#fff; border:2px solid #e8e0d5; border-radius:14px; padding:8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; -webkit-appearance:none; touch-action:manipulation; transition:transform 0.12s; }
   .face-btn:active { transform:scale(0.94); }
   .face-btn img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; pointer-events:none; }
-
   .face-btn.wrong { animation:wrongAnim 0.35s ease; }
   @keyframes wrongAnim { 0%,100%{background:#fff;border-color:#e8e0d5} 40%{background:#ffe0e0;border-color:var(--red)} }
-
   .face-btn.hit { animation:hitAnim 0.3s ease forwards; pointer-events:none; }
   @keyframes hitAnim { 0%{transform:scale(1)} 40%{transform:scale(1.15)} 100%{transform:scale(0);opacity:0} }
 
-  /* SPEECH BUBBLE */
-  #bubble {
-    display:none; position:fixed; z-index:500;
-    background:#fff; border:3px solid var(--red); border-radius:16px;
-    padding:10px 16px; font-size:15px; font-weight:900; color:var(--dark);
-    box-shadow:0 4px 20px rgba(255,71,87,0.3); pointer-events:none;
-    white-space:nowrap;
-    transform:translate(-50%,-100%) translateY(-14px);
-    animation:bubblePop 0.25s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
-  }
+  /* BUBBLE */
+  #bubble { display:none; position:fixed; z-index:500; background:#fff; border:3px solid var(--red); border-radius:16px; padding:10px 16px; font-size:15px; font-weight:900; color:var(--dark); box-shadow:0 4px 20px rgba(255,71,87,0.3); pointer-events:none; white-space:nowrap; transform:translate(-50%,-100%) translateY(-14px); }
   #bubble::after { content:''; position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--red); }
   #bubble::before { content:''; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#fff; z-index:1; }
-  @keyframes bubblePop { from{transform:translate(-50%,-100%) translateY(-14px) scale(0.5);opacity:0} to{transform:translate(-50%,-100%) translateY(-14px) scale(1);opacity:1} }
 
   /* GLITCH */
   body.glitch1 #header h1 { animation:gTitle 5s infinite; }
@@ -103,16 +64,9 @@
   body.glitch3 #header { filter:hue-rotate(180deg); }
 
   /* SCARE */
-  #scare {
-    display:none; position:fixed; inset:0; background:#000; z-index:9999;
-    flex-direction:column; justify-content:center; align-items:center;
-  }
+  #scare { display:none; position:fixed; inset:0; background:#000; z-index:9999; flex-direction:column; justify-content:center; align-items:center; }
   #scare.active { display:flex; }
-  #scare img {
-    max-width:95vw; max-height:75vh; object-fit:contain;
-    border:3px solid var(--red); box-shadow:0 0 40px var(--red),0 0 80px var(--red);
-    animation:scareIn 0.25s ease-out forwards, scareShake 0.15s infinite 0.25s;
-  }
+  #scare img { max-width:95vw; max-height:75vh; object-fit:contain; border:3px solid var(--red); box-shadow:0 0 40px var(--red),0 0 80px var(--red); animation:scareIn 0.25s ease-out forwards, scareShake 0.15s infinite 0.25s; }
   @keyframes scareIn { from{transform:scale(0.2) rotate(-5deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
   @keyframes scareShake { 0%,100%{transform:scale(1) rotate(0)} 33%{transform:scale(1.02) rotate(-0.8deg)} 66%{transform:scale(0.99) rotate(0.8deg)} }
   #scare-text { color:var(--red); font-size:28px; font-weight:900; margin-top:18px; letter-spacing:6px; text-shadow:0 0 16px var(--red); animation:textBlink 0.4s infinite; }
@@ -144,20 +98,19 @@
   </div>
 </div>
 
-<!-- BUBBLE -->
 <div id="bubble"></div>
 
 <!-- SCARE -->
 <div id="scare">
-  <img id="scare-img" src="" alt="">
+  <img id="scare-img" src="images/seki_scare.jpg" alt="">
   <div id="scare-text">みつけた👁</div>
   <button id="restart-btn" onclick="location.reload()">もう一度？</button>
 </div>
 
 <script>
-// ==============================
+// ============================================================
 // 設定
-// ==============================
+// ============================================================
 const ROUNDS = [
   { sekiSlot: 4 },
   { sekiSlot: 2 },
@@ -167,8 +120,6 @@ const ROUNDS = [
   { sekiSlot: 3 },
   { sekiSlot: 4 },
 ];
-
-const SCARE_SRC = 'images/seki_scare.jpg';
 
 const SEKI_LINES = [
   'うぇ〜ん😭',
@@ -180,109 +131,59 @@ const SEKI_LINES = [
   'ひどい…',
 ];
 
-// ==============================
+// ============================================================
 // 状態
-// ==============================
+// ============================================================
 let round = 0;
 let bubbleTimer = null;
 let audioCtx = null;
-
-// ==============================
-// 音声（mp3）- スタート時に生成
-// ==============================
 let bgmNormal = null;
 let bgmCreepy = null;
-let sfxHit    = null;
-let sfxScare  = null;
+let sfxHit = null;
 let bgmFadeTimer = null;
 
-function initAudio() {
-  // ユーザー操作の直後に呼ぶことでスマホでも再生できる
+// ============================================================
+// スタート（ユーザータップ直後に全音声初期化）
+// ============================================================
+function startGame() {
+  // Web Audio API 初期化
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // 無音バッファでAudioContextをアンロック
+  const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioCtx.destination);
+  src.start();
+
+  // BGM初期化（タップ直後なのでiOSも再生可能）
   bgmNormal = new Audio('sounds/bgm_normal.mp3');
   bgmNormal.loop = true;
   bgmNormal.volume = 0.5;
+  bgmNormal.play().catch(() => {});
 
   bgmCreepy = new Audio('sounds/bgm_creepy.mp3');
   bgmCreepy.loop = true;
-  bgmCreepy.volume = 0.0;
+  bgmCreepy.volume = 0;
 
   sfxHit = new Audio('sounds/hit.mp3');
   sfxHit.volume = 0.8;
 
-  sfxScare = new Audio('sounds/scare.mp3');
-  sfxScare.volume = 1.0;
-}
-
-function switchToCreepy() {
-  if (!bgmNormal || !bgmCreepy) return;
-  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
-  bgmCreepy.currentTime = 0;
-  bgmCreepy.play().catch(()=>{});
-  bgmFadeTimer = setInterval(() => {
-    if (bgmNormal.volume > 0.02) {
-      bgmNormal.volume = Math.max(0, bgmNormal.volume - 0.05);
-      bgmCreepy.volume = Math.min(0.5, bgmCreepy.volume + 0.05);
-    } else {
-      bgmNormal.volume = 0;
-      bgmNormal.pause();
-      bgmCreepy.volume = 0.5;
-      clearInterval(bgmFadeTimer);
-    }
-  }, 100);
-}
-
-function stopAllBgm() {
-  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
-  if (bgmNormal) bgmNormal.pause();
-  if (bgmCreepy) bgmCreepy.pause();
-}
-
-// ==============================
-// スタート
-// ==============================
-function startGame() {
-  // ユーザー操作の直後にAudioを初期化
-  initAudio();
-
-  // iOS Safari対策：hitだけ無音でアンロック
-  const originalVol = sfxHit.volume;
-  sfxHit.volume = 0;
-  sfxHit.play().then(() => {
-    sfxHit.pause();
-    sfxHit.currentTime = 0;
-    sfxHit.volume = originalVol;
-  }).catch(()=>{});
-
-  // AudioContextをアンロック（無音バッファを再生）
-  const silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-  const silentSrc = audioCtx.createBufferSource();
-  silentSrc.buffer = silentBuf;
-  silentSrc.connect(audioCtx.destination);
-  silentSrc.start();
-
-  // BGMを再生
-  bgmNormal.volume = 0.5;
-  bgmNormal.play().catch(()=>{});
-
+  // 画面切り替え
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game').style.display = 'block';
-
-  // ジャンプスケア画像を先読み
-  document.getElementById('scare-img').src = SCARE_SRC;
 
   buildGrid();
 }
 
-// ==============================
+// ============================================================
 // グリッド構築
-// ==============================
+// ============================================================
 function buildGrid() {
-  const cfg = ROUNDS[round];
-  const sekiSlot = cfg.sekiSlot;
-
+  const sekiSlot = ROUNDS[round].sekiSlot;
   const slots = [1,2,3,4,5,6].sort(() => Math.random() - 0.5);
 
-  // ドット更新
+  // ドット
   const dotsEl = document.getElementById('dots');
   dotsEl.innerHTML = '';
   for (let i = 0; i < 7; i++) {
@@ -292,18 +193,18 @@ function buildGrid() {
   }
   document.getElementById('round-num').textContent = round + 1;
 
-  // グリッチ＆BGM切り替え
+  // グリッチ & BGM切り替え
   document.body.className = '';
   if (round >= 5) {
     document.body.classList.add('glitch3');
+    if (round === 5) switchToCreepy();
   } else if (round >= 3) {
     document.body.classList.add('glitch2');
-    if (round === 4) switchToCreepy(); // R5でcreepyに切り替え
   } else if (round >= 2) {
     document.body.classList.add('glitch1');
   }
 
-  // グリッド描画
+  // グリッド
   const grid = document.getElementById('button-grid');
   grid.innerHTML = '';
   slots.forEach(slotNum => {
@@ -318,82 +219,101 @@ function buildGrid() {
   });
 }
 
-// ==============================
+// ============================================================
 // タップ
-// ==============================
+// ============================================================
 function onTap(e, btn, isSeki) {
   if (isSeki) {
     // 正解音
-    if (sfxHit) { sfxHit.currentTime = 0; sfxHit.play().catch(()=>{}); }
+    if (sfxHit) { sfxHit.currentTime = 0; sfxHit.play().catch(() => {}); }
 
     showBubble(e, SEKI_LINES[round] || SEKI_LINES[0]);
     btn.classList.add('hit');
     round++;
 
     if (round >= 7) {
-      // ジャンプスケアはタップ直後に実行（スマホ対応）
-      // BGMを0.6秒でフェードアウト → 0.3秒無音 → 爆音＋画像
-      fadeBgmThenScare();
+      // ジャンプスケア：タップ直後に爆音（スマホ対応）
+      // BGMフェードアウト開始
+      fadeBgm(600, () => {
+        // 無音0.3秒後に画像
+        setTimeout(() => {
+          document.getElementById('scare').classList.add('active');
+          setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
+        }, 300);
+      });
+      // 爆音はタップ直後に鳴らす（setTimeoutなし）
+      playScream();
     } else {
       setTimeout(buildGrid, 600);
     }
   } else {
     btn.classList.add('wrong');
-    btn.addEventListener('animationend', () => btn.classList.remove('wrong'), {once:true});
+    btn.addEventListener('animationend', () => btn.classList.remove('wrong'), { once: true });
   }
 }
 
-// ==============================
+// ============================================================
+// BGMフェードアウト
+// ============================================================
+function fadeBgm(duration, callback) {
+  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
+  const steps = duration / 50;
+  let step = 0;
+  const initN = bgmNormal ? bgmNormal.volume : 0;
+  const initC = bgmCreepy ? bgmCreepy.volume : 0;
+  bgmFadeTimer = setInterval(() => {
+    step++;
+    const r = Math.max(0, 1 - step / steps);
+    if (bgmNormal) bgmNormal.volume = initN * r;
+    if (bgmCreepy) bgmCreepy.volume = initC * r;
+    if (step >= steps) {
+      clearInterval(bgmFadeTimer);
+      if (bgmNormal) bgmNormal.pause();
+      if (bgmCreepy) bgmCreepy.pause();
+      if (callback) callback();
+    }
+  }, 50);
+}
+
+// ============================================================
+// BGM切り替え（normalからcreepyへ）
+// ============================================================
+function switchToCreepy() {
+  if (!bgmCreepy) return;
+  if (bgmFadeTimer) clearInterval(bgmFadeTimer);
+  bgmCreepy.currentTime = 0;
+  bgmCreepy.play().catch(() => {});
+  const steps = 20;
+  let step = 0;
+  bgmFadeTimer = setInterval(() => {
+    step++;
+    if (bgmNormal) bgmNormal.volume = Math.max(0, 0.5 * (1 - step / steps));
+    if (bgmCreepy) bgmCreepy.volume = Math.min(0.5, 0.5 * (step / steps));
+    if (step >= steps) {
+      clearInterval(bgmFadeTimer);
+      if (bgmNormal) { bgmNormal.volume = 0; bgmNormal.pause(); }
+      if (bgmCreepy) bgmCreepy.volume = 0.5;
+    }
+  }, 100);
+}
+
+// ============================================================
 // 吹き出し
-// ==============================
+// ============================================================
 function showBubble(e, text) {
   if (bubbleTimer) clearTimeout(bubbleTimer);
   const b = document.getElementById('bubble');
   b.textContent = text;
   const t = e.changedTouches ? e.changedTouches[0] : e;
-  b.style.left = (t.clientX || window.innerWidth/2) + 'px';
-  b.style.top  = (t.clientY || window.innerHeight/2) + 'px';
+  b.style.left = (t.clientX || window.innerWidth / 2) + 'px';
+  b.style.top  = (t.clientY || window.innerHeight / 2) + 'px';
   b.style.display = 'block';
-  void b.offsetWidth;
-  b.style.animation = 'none';
-  void b.offsetWidth;
-  b.style.animation = '';
   bubbleTimer = setTimeout(() => b.style.display = 'none', 1600);
 }
-// ==============================
-// BGMフェードアウト → 無音 → ジャンプスケア
-// ==============================
-function fadeBgmThenScare() {
-  const fadeStep = 50; // ms
-  const fadeDuration = 600; // ms
-  const steps = fadeDuration / fadeStep;
-  let step = 0;
 
-  const initialNormal = bgmNormal ? bgmNormal.volume : 0;
-  const initialCreepy = bgmCreepy ? bgmCreepy.volume : 0;
-
-  const fadeTimer = setInterval(() => {
-    step++;
-    const ratio = 1 - step / steps;
-    if (bgmNormal) bgmNormal.volume = Math.max(0, initialNormal * ratio);
-    if (bgmCreepy) bgmCreepy.volume = Math.max(0, initialCreepy * ratio);
-
-    if (step >= steps) {
-      clearInterval(fadeTimer);
-      stopAllBgm();
-      // 無音0.3秒
-      setTimeout(() => {
-        playScream();
-        document.getElementById('scare').classList.add('active');
-        setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
-      }, 300);
-    }
-  }, fadeStep);
-}
-
-// ==============================
+// ============================================================
 // ジャンプスケア爆音（Web Audio API）
-// ==============================
+// ============================================================
 function playScream() {
   if (!audioCtx) return;
   try {
@@ -403,31 +323,31 @@ function playScream() {
     const bufLen = audioCtx.sampleRate * 2;
     const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
     const d = buf.getChannelData(0);
-    for (let i = 0; i < bufLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/bufLen, 0.3);
+    for (let i = 0; i < bufLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufLen, 0.3);
     const ns = audioCtx.createBufferSource(), ng = audioCtx.createGain();
     ns.buffer = buf;
     ng.gain.setValueAtTime(6, now);
-    ng.gain.exponentialRampToValueAtTime(0.001, now+2);
+    ng.gain.exponentialRampToValueAtTime(0.001, now + 2);
     ns.connect(ng); ng.connect(audioCtx.destination); ns.start(now);
 
     // 高音スクリーム
     const o = audioCtx.createOscillator(), og = audioCtx.createGain();
     o.type = 'sawtooth';
     o.frequency.setValueAtTime(1200, now);
-    o.frequency.exponentialRampToValueAtTime(150, now+1.5);
+    o.frequency.exponentialRampToValueAtTime(150, now + 1.5);
     og.gain.setValueAtTime(2.5, now);
-    og.gain.exponentialRampToValueAtTime(0.001, now+1.5);
-    o.connect(og); og.connect(audioCtx.destination); o.start(now); o.stop(now+1.5);
+    og.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+    o.connect(og); og.connect(audioCtx.destination); o.start(now); o.stop(now + 1.5);
 
     // 低音ドン
     const b = audioCtx.createOscillator(), bg = audioCtx.createGain();
     b.type = 'sine';
     b.frequency.setValueAtTime(60, now);
-    b.frequency.exponentialRampToValueAtTime(30, now+1);
+    b.frequency.exponentialRampToValueAtTime(30, now + 1);
     bg.gain.setValueAtTime(4, now);
-    bg.gain.exponentialRampToValueAtTime(0.001, now+1.2);
-    b.connect(bg); bg.connect(audioCtx.destination); b.start(now); b.stop(now+1.2);
-  } catch(e) { console.log('scream error:', e); }
+    bg.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+    b.connect(bg); bg.connect(audioCtx.destination); b.start(now); b.stop(now + 1.2);
+  } catch(e) {}
 }
 </script>
 </body>
