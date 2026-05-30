@@ -205,19 +205,38 @@ function buildGrid() {
     document.body.classList.add('glitch1');
   }
 
-  // グリッド
+  // グリッド：全画像プリロード後に一気に表示
   const grid = document.getElementById('button-grid');
-  grid.innerHTML = '';
-  slots.forEach(slotNum => {
-    const isSeki = (slotNum === sekiSlot);
-    const btn = document.createElement('button');
-    btn.className = 'face-btn';
-    const img = document.createElement('img');
-    img.src = `images/r${round + 1}_${slotNum}.jpg`;
-    btn.appendChild(img);
-    btn.addEventListener('click', e => onTap(e, btn, isSeki));
-    grid.appendChild(btn);
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:#aaa;font-size:13px;letter-spacing:2px;">読み込み中…</div>';
+
+  let loaded = 0;
+  const btnData = slots.map(slotNum => ({
+    slotNum,
+    isSeki: slotNum === sekiSlot,
+    src: `images/r${round + 1}_${slotNum}.jpg`
+  }));
+
+  btnData.forEach(item => {
+    const pre = new Image();
+    pre.onload = pre.onerror = () => {
+      loaded++;
+      if (loaded === 6) renderGrid();
+    };
+    pre.src = item.src;
   });
+
+  function renderGrid() {
+    grid.innerHTML = '';
+    btnData.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'face-btn';
+      const img = document.createElement('img');
+      img.src = item.src;
+      btn.appendChild(img);
+      btn.addEventListener('click', e => onTap(e, btn, item.isSeki));
+      grid.appendChild(btn);
+    });
+  }
 }
 
 // ============================================================
@@ -233,17 +252,14 @@ function onTap(e, btn, isSeki) {
     round++;
 
     if (round >= 7) {
-      // ジャンプスケア：タップ直後に爆音（スマホ対応）
-      // BGMフェードアウト開始
+      // BGMフェードアウト → 無音0.3秒 → 画像と爆音同時
       fadeBgm(600, () => {
-        // 無音0.3秒後に画像
         setTimeout(() => {
+          playScream();
           document.getElementById('scare').classList.add('active');
           setTimeout(() => document.getElementById('restart-btn').style.display = 'block', 2500);
         }, 300);
       });
-      // 爆音はタップ直後に鳴らす（setTimeoutなし）
-      playScream();
     } else {
       setTimeout(buildGrid, 600);
     }
