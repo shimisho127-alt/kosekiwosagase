@@ -147,14 +147,15 @@ let bgmFadeTimer = null;
 // ============================================================
 function startGame() {
   // Web Audio API 初期化
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  // 無音バッファでAudioContextをアンロック
-  const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-  const src = audioCtx.createBufferSource();
-  src.buffer = buf;
-  src.connect(audioCtx.destination);
-  src.start();
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // 無音バッファでAudioContextをアンロック
+    const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start();
+  } catch(e) { audioCtx = null; }
 
   // BGM初期化（タップ直後なのでiOSも再生可能）
   bgmNormal = new Audio('sounds/bgm_normal.mp3');
